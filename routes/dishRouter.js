@@ -1,46 +1,95 @@
-const express=require('express');
-const dishRouter=express.Router();
+const express = require("express");
+const dishRouter = express.Router();
 
-dishRouter.route('/')
-.all((req,res,next)=>{
-    res.statusCode=200;
-    res.setHeader('Content-Type','text/plain');
-    next();
-})
+const Dishes = require("../models/dishes");
 
-.get((req,res)=>{
-   res.send('Will send all the dishes to you!');
-})
+dishRouter
+  .route('/')
 
-.post((req,res)=>{
-   res.send("add dish: "+req.body.name+" with details "+req.body.description);
-})
-.put((req,res)=>{
-   res.statusCode=403;
-   res.send('PUt operations are not supported on dishes');
-})
-.delete((req,res)=>{ 
-   res.send('deleting all the dishes');
-});
+  .get((req, res, next) => {
+    Dishes.find({})
+      .then(
+        (dishes) => {
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.json(dishes);
+        },
+        (err) => next(err)
+      )
+      .catch((err) => next(err));
+  })
 
-dishRouter.route('/:dishId')
-.get((req,res)=>{
-    const {dishId:id}=req.params;
-    res.send('Will send details of the dish '+id);
-})
+  .post((req, res, next) => {
+    Dishes.create(req.body)
+      .then(
+        (dish) => {
+          console.log("Dish created ", dish);
+          res.statusCode = 200;
+          res.setHeader("Contet-Type", "application/json");
+          res.json(dish);
+        },
+        (err) => next(err)
+      )
+      .catch((err) => next(err));
+  })
+  .put((req, res) => {
+    res.statusCode = 403;
+    res.end("PUt operations are not supported on dishes");
+  })
+  .delete((req, res, next) => {
+    Dishes.deleteMany({})
+      .then(
+        (resp) => {
+          res.statusCode = 200;
+          res.setHeader("Contet-Type", "application/json");
+          res.json(resp);
+        },
+        (err) => next(err)
+      )
+      .catch((err) => next(err));
+  });
 
-.post((req,res)=>{
-    res.send("post operation is not supported on /dishes/"+req.params.dishId);
-})
-.put((req,res)=>{
-    res.statusCode=403;
-    res.write('updating the dishe with '+req.params.dishId+'\n');
-    res.end("will update the dish: "+req.params.name+" by the following details "+req.body.description);
-     
-})
-.delete((req,res)=>{ 
-    res.send('deleting the dish with id '+req.params.dishId);
-});
+dishRouter
+  .route("/:dishId")
+  .get(async (req, res,next) => {
+    try {
+      const { dishId: id } = req.params;
+      const dish = await Dishes.findById(id);
+      res.statusCode = 200;
+      res.setHeader("Contet-Type", "application/json");
+      res.json(dish);
+    } catch (err) {
+      next(err);
+    }
+  })
 
+  .post((req, res) => {
+    res.statusCode = 403;
+    res.send("post operation is not supported on /dishes/" + req.params.dishId);
+  })
+  .put(async (req, res, next) => {
+    try {
+      const dish = await Dishes.findByIdAndUpdate(
+        req.params.dishId,
+        { $set: req.body },
+        { new: true } );
+      
+        res.statusCode = 200;
+        res.setHeader("Contet-Type", "application/json");
+        res.json(dish);
+    } catch (err) {
+      next(err);
+    }
+  })
+  .delete(async(req, res,next) => {
+    try{
+     const response=await Dishes.findOneAndRemove(req.params.dishId);
+        res.statusCode = 200;
+        res.setHeader("Contet-Type", "application/json");
+     res.json(response);
+    }catch(err){
+        next(err);
+    }
+  });
 
-module.exports=dishRouter;
+module.exports = dishRouter;
