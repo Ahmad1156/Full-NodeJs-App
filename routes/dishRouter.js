@@ -3,6 +3,8 @@ const dishRouter = express.Router();
 
 const Dishes = require("../models/dishes");
 
+const authenticate=require('../authenticate');
+
 dishRouter
   .route("/")
 
@@ -19,7 +21,7 @@ dishRouter
       .catch((err) => next(err));
   })
 
-  .post((req, res, next) => {
+  .post(authenticate.verifyUser,(req, res, next) => {
     Dishes.create(req.body)
       .then(
         (dish) => {
@@ -31,11 +33,11 @@ dishRouter
       )
       .catch((err) => next(err));
   })
-  .put((req, res) => {
+  .put(authenticate.verifyUser,(req, res) => {
     res.statusCode = 403;
     res.end("PUt operations are not supported on dishes");
   })
-  .delete((req, res, next) => {
+  .delete(authenticate.verifyUser,(req, res, next) => {
     Dishes.deleteMany({})
       .then(
         (resp) => {
@@ -63,11 +65,11 @@ dishRouter
     }
   })
 
-  .post((req, res) => {
+  .post(authenticate.verifyUser,(req, res) => {
     res.statusCode = 403;
     res.send("post operation is not supported on /dishes/" + req.params.dishId);
   })
-  .put(async (req, res, next) => {
+  .put(authenticate.verifyUser,async (req, res, next) => {
     try {
       const dish = await Dishes.findByIdAndUpdate(
         req.params.dishId,
@@ -82,7 +84,7 @@ dishRouter
       next(err);
     }
   })
-  .delete(async (req, res, next) => {
+  .delete(authenticate.verifyUser,async (req, res, next) => {
     try {
       const response = await Dishes.findOneAndRemove(req.params.dishId);
       res.statusCode = 200;
@@ -114,7 +116,7 @@ dishRouter
       next(err);
     }
   })
-  .post(async (req, res, next) => {
+  .post(authenticate.verifyUser,async (req, res, next) => {
     try{
       const dish=await Dishes.findById(req.params.dishId);
       if(dish!=null){
@@ -135,11 +137,11 @@ dishRouter
     }
     
   })
-  .put((req, res) => {
+  .put(authenticate.verifyUser,(req, res) => {
     res.statusCode = 403;
     res.end("PUt operations are not supported on /dishes/"+req.params.dishId+"/comments");
   })
-  .delete(async(req, res, next) => {
+  .delete(authenticate.verifyUser,async(req, res, next) => {
     try {
         const dish = await Dishes.findById(req.params.dishId);
         if (dish != null) {
@@ -186,12 +188,12 @@ dishRouter
       next(err);
     }
   })
-  .post(async (req, res, next) => {
+  .post(authenticate.verifyUser,async (req, res, next) => {
      res.statusCode=403;
      res.end('POST operation not supported on /dishes/'+req.params.dishId+'/comments/'+req.params.commentId)
   })
     
-  .put(async(req, res,next) => {
+  .put(authenticate.verifyUser,async(req, res,next) => {
     try {
         const dish = await Dishes.findById(req.params.dishId);
         if (dish != null&&dish.comments.id(req.params.commentId)!=null) {
@@ -219,7 +221,7 @@ dishRouter
         next(err);
       }
 })
-  .delete(async(req, res, next) => {
+  .delete(authenticate.verifyUser,async(req, res, next) => {
     try {
         const dish = await Dishes.findById(req.params.dishId);
         if (dish != null) {

@@ -1,6 +1,8 @@
 const express=require('express');
 const leaderRouter=express.Router();
 
+const authenticate=require('../authenticate');
+
 const Leader=require('../models/leaders');
 
 leaderRouter.route('/')
@@ -15,7 +17,7 @@ leaderRouter.route('/')
     }
   })
 
-  .post(async (req, res, next) => {
+  .post(authenticate.verifyUser,async (req, res, next) => {
     try {
       const newLeader = await Leader.create(req.body);
       res.statusCode = 200;
@@ -25,11 +27,11 @@ leaderRouter.route('/')
       next(err);
     }
   })
-  .put((req, res, next) => {
+  .put(authenticate.verifyUser,(req, res, next) => {
     res.statusCode = 403;
     res.send("PUt operations are not supported on /leaders");
   })
-  .delete(async(req, res,next) => {
+  .delete(authenticate.verifyUser,async(req, res,next) => {
     try {
         const resp=await Leader.deleteMany({});
         res.status=200;
@@ -53,13 +55,13 @@ leaderRouter
     }
   })
 
-  .post((req, res,next) => {
+  .post(authenticate.verifyUser,(req, res,next) => {
     res.send(
       "post operation is not supported on /leaders/" + req.params.leaderId
     );
   })
 
-  .put(async(req, res,next) => {
+  .put(authenticate.verifyUser,async(req, res,next) => {
     try {
         const updatedLeader = await Leader.findByIdAndUpdate(
           req.params.leaderId,
@@ -74,7 +76,7 @@ leaderRouter
         next(err);
       }
   })
-  .delete(async(req, res,next) => {
+  .delete(authenticate.verifyUser,async(req, res,next) => {
     try{
         const resp=await Leader.findByIdAndRemove(req.params.leaderId);
         res.statusCode=200;
