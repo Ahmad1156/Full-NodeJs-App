@@ -5,21 +5,17 @@ const Dishes = require("../models/dishes");
 
 const authenticate=require('../authenticate');
 
-dishRouter
-  .route("/")
-
-  .get((req, res, next) => {
+dishRouter.route('/')
+.get((req,res,next) => {
     Dishes.find({})
-      .then(
-        (dishes) => {
-          res.statusCode = 200;
-          res.setHeader("Content-Type", "application/json");
-          res.json(dishes);
-        },
-        (err) => next(err)
-      )
-      .catch((err) => next(err));
-  })
+    .populate('comments.author')
+    .then((dishes) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(dishes);
+    }, (err) => next(err))
+    .catch((err) => next(err));
+})
 
   .post(authenticate.verifyUser,(req, res, next) => {
     Dishes.create(req.body)
@@ -56,7 +52,7 @@ dishRouter
   .get(async (req, res, next) => {
     try {
       const { dishId: id } = req.params;
-      const dish = await Dishes.findById(id);
+      const dish = await Dishes.findById(id).populate('comments.author');
       res.statusCode = 200;
       res.setHeader("Contet-Type", "application/json");
       res.json(dish);
@@ -102,7 +98,7 @@ dishRouter
 
   .get(async (req, res, next) => {
     try {
-      const dish = await Dishes.findById(req.params.dishId);
+      const dish = await Dishes.findById(req.params.dishId).populate('comments.author');
       if (dish != null) {
         res.statusCode = 200;
         res.setHeader("Contet-Type", "application/json");
@@ -120,11 +116,12 @@ dishRouter
     try{
       const dish=await Dishes.findById(req.params.dishId);
       if(dish!=null){
+        req.body.author=req.user._id;
         dish.comments.push(req.body);
-        await dish.save();
+       await dish.save();
         res.statusCode=200;
         res.setHeader("Contet-Type", "application/json");
-        res.json(dish.comments);
+        res.json(dish);
       }
       else{
         err = new Error("Dish " + req.params.dishId + " is not Found");
@@ -169,7 +166,7 @@ dishRouter
   .route("/:dishId/comments/:commentId")
   .get(async (req, res, next) => {
     try {
-      const dish = await Dishes.findById(req.params.dishId);
+      const dish = await Dishes.findById(req.params.dishId).populate('comments.author');
       if (dish != null&&dish.comments.id(req.params.commentId)!=null) {
         res.statusCode = 200;
         res.setHeader("Contet-Type", "application/json");
@@ -204,9 +201,10 @@ dishRouter
             dish.comments.id(req.params.commentId).comment=req.body.comment;
           }
           await dish.save();
+          const popDish=await Dishes.findById(dish._id).populate('comments.author');
           res.statusCode = 200;
           res.setHeader("Contet-Type", "application/json");
-          res.json(dish.comments.id(req.params.commentId));
+          res.json(popDish);
         } else if(dish==null) {
           err = new Error("Dish " + req.params.dishId + " is not Found");
           res.statusCode = 404; //not Found
