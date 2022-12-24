@@ -2,11 +2,16 @@ var express = require('express');
 var router = express.Router();
 var passport=require('passport');
 const User=require('../models/user');
-var authenticate = require('../authenticate');
+var authenticate = require('../authentication/authenticate');
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+router.get('/',authenticate.verifyUser,authenticate.verifyAdmin,async function(req, res, next) {
+   try{
+    const users=await User.find({});
+    res.json(users);
+   }catch(err){
+     next(err);
+   }
 });
 //signUp route
 router.post('/signup', (req, res, next) => {
@@ -29,7 +34,7 @@ router.post('/signup', (req, res, next) => {
           res.json({err: err});
           return ;
         }
-        passport.authenticate('local')(req, res, () => {
+        passport.authenticate('local',{session:false})(req, res, () => {
           res.statusCode = 200;
           res.setHeader('Content-Type', 'application/json');
           res.json({success: true, status: 'Registration Successful!'});
@@ -40,9 +45,9 @@ router.post('/signup', (req, res, next) => {
 });
 
 
-router.post('/login', passport.authenticate('local'), (req, res) => {
-
-  var token = authenticate.getToken({_id: req.user._id});
+router.post('/login', passport.authenticate('local',{session:false}), async(req, res) => {
+  const user=await User.findById({_id:req.user._id});
+  var token = authenticate.getToken({_id: req.user._id,admin:user.admin});
   res.statusCode = 200;
   res.setHeader('Content-Type', 'application/json');
   res.json({success: true,token:token, status: 'You are successfully logged in!'});

@@ -1,12 +1,13 @@
 var passport=require('passport');
 var LocalStrategy=require('passport-local').Strategy;
-var User=require('./models/user');
+var User=require('../models/user');
 
 var JwtStrategy = require('passport-jwt').Strategy;
 var ExtractJwt = require('passport-jwt').ExtractJwt;
 var jwt = require('jsonwebtoken'); // used to create, sign, and verify tokens
 
-var config = require('./config.js');
+var config = require('../config.js');
+const user = require('../models/user');
 
 exports.local=passport.use(new LocalStrategy(User.authenticate()));
 
@@ -40,3 +41,14 @@ exports.jwtPassport = passport.use(new JwtStrategy(opts,
     }));
 
 exports.verifyUser = passport.authenticate('jwt', {session: false});
+
+exports.verifyAdmin=async(req,res,next)=>{
+    if(req.user.admin){
+        next();
+    }
+    else{
+        var err=new Error("you are not authorized to acces this Route!!");
+        err.statusCode=403;
+        next(err);
+    }
+}
