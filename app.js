@@ -5,11 +5,11 @@ var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var Config=require('./Config');
 var passport = require('passport');
-const session=require('express-session');
+
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
-
+const uploadRouter = require('./routes/uploadRouter');
 
 
 const dishRouter = require("./routes/dishRouter");
@@ -36,7 +36,7 @@ start();
 
 var app = express();
 
-// Secure traffic only
+// Secure traffic only where all requests coming to the unsecure http server will be redirected to the secure https server.
 app.all('*', (req, res, next) => {
   if (req.secure) {
     return next();
@@ -71,6 +71,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/dishes", dishRouter);
 app.use("/leaders", leaderRouter);
 app.use("/promotions", promoRouter);
+app.use('/imageUpload',uploadRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
