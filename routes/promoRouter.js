@@ -2,10 +2,11 @@ const express = require("express");
 const promoRouter = express.Router();
 const authenticate=require('../authentication/authenticate');
 const promotion = require("../models/promotions");
-
+const cors=require('./cors');
 promoRouter
   .route("/")
-  .get(async (req, res, next) => {
+  .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
+  .get(cors.cors,async (req, res, next) => {
     try {
       const promotions = await promotion.find({});
       res.statusCode = 200;
@@ -16,7 +17,7 @@ promoRouter
     }
   })
 
-  .post(authenticate.verifyUser,authenticate.verifyAdmin,async (req, res, next) => {
+  .post(cors.corsWithOptions,authenticate.verifyUser,authenticate.verifyAdmin,async (req, res, next) => {
     try {
       const newPromo = await promotion.create(req.body);
       res.statusCode = 200;
@@ -26,11 +27,11 @@ promoRouter
       next(err);
     }
   })
-  .put(authenticate.verifyUser,authenticate.verifyAdmin,(req, res, next) => {
+  .put(cors.corsWithOptions,authenticate.verifyUser,authenticate.verifyAdmin,(req, res, next) => {
     res.statusCode = 403;
     res.send("PUt operations are not supported on /promotions");
   })
-  .delete(authenticate.verifyUser,async(req, res,next) => {
+  .delete(cors.corsWithOptions,authenticate.verifyUser,async(req, res,next) => {
     try {
         const resp=await promotion.deleteMany({});
         res.status=200;
@@ -42,7 +43,8 @@ promoRouter
 
 promoRouter
   .route("/:promoId")
-  .get(async(req, res,next) => {
+  .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
+  .get(cors.cors,async(req, res,next) => {
     try {
         const { promoId: id } = req.params;
         const specificPromotion=await promotion.findById(id);
@@ -54,13 +56,13 @@ promoRouter
     }
   })
 
-  .post(authenticate.verifyUser,authenticate.verifyAdmin,async(req, res,next) => {
+  .post(cors.corsWithOptions,authenticate.verifyUser,authenticate.verifyAdmin,async(req, res,next) => {
     res.send(
       "post operation is not supported on /promotions/" + req.params.promoId
     );
   })
 
-  .put(authenticate.verifyUser,authenticate.verifyAdmin,async(req, res,next) => {
+  .put(cors.corsWithOptions,authenticate.verifyUser,authenticate.verifyAdmin,async(req, res,next) => {
     try {
         const updatedPromotion = await promotion.findByIdAndUpdate(
           req.params.promoId,
@@ -75,7 +77,7 @@ promoRouter
         next(err);
       }
   })
-  .delete(authenticate.verifyUser,authenticate.verifyAdmin,async(req, res,next) => {
+  .delete(cors.corsWithOptions,authenticate.verifyUser,authenticate.verifyAdmin,async(req, res,next) => {
     try{
         const resp=await promotion.findByIdAndRemove(req.params.promoId);
         res.statusCode=200;

@@ -3,9 +3,10 @@ var router = express.Router();
 var passport=require('passport');
 const User=require('../models/user');
 var authenticate = require('../authentication/authenticate');
-
+const cors=require('./cors');
 /* GET users listing. */
-router.get('/',authenticate.verifyUser,authenticate.verifyAdmin,async function(req, res, next) {
+router.options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
+.get('/',cors.cors,authenticate.verifyUser,authenticate.verifyAdmin,async (req, res, next)=> {
    try{
     const users=await User.find({});
     res.json(users);
@@ -14,7 +15,7 @@ router.get('/',authenticate.verifyUser,authenticate.verifyAdmin,async function(r
    }
 });
 //signUp route
-router.post('/signup', (req, res, next) => {
+router.post('/signup',cors.corsWithOptions, (req, res, next) => {
   User.register(new User({username: req.body.username}), 
     req.body.password, (err, user) => {
     if(err) {
@@ -45,7 +46,7 @@ router.post('/signup', (req, res, next) => {
 });
 
 
-router.post('/login', passport.authenticate('local',{session:false}), async(req, res) => {
+router.post('/login',cors.corsWithOptions, passport.authenticate('local',{session:false}), async(req, res) => {
   const user=await User.findById({_id:req.user._id});
   var token = authenticate.getToken({_id: req.user._id,admin:user.admin});
   res.statusCode = 200;
