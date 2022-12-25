@@ -1,13 +1,12 @@
 var passport=require('passport');
 var LocalStrategy=require('passport-local').Strategy;
 var User=require('../models/user');
-
+const FacebookTokenStrategy=require('passport-facebook-token');
 var JwtStrategy = require('passport-jwt').Strategy;
 var ExtractJwt = require('passport-jwt').ExtractJwt;
 var jwt = require('jsonwebtoken'); // used to create, sign, and verify tokens
 
-var config = require('../config.js');
-const user = require('../models/user');
+
 
 exports.local=passport.use(new LocalStrategy(User.authenticate()));
 
@@ -52,3 +51,30 @@ exports.verifyAdmin=async(req,res,next)=>{
         next(err);
     }
 }
+
+exports.facebookPassport = passport.use(new FacebookTokenStrategy({
+    clientID: process.env.clientId,
+    clientSecret: process.env.clientSecret
+}, (accessToken, refreshToken, profile, done) => {
+    User.findOne({facebookId: profile.id}, (err, user) => {
+        if (err) {
+            return done(err, false);
+        }
+        if (!err && user !== null) {
+            return done(null, user);
+        }
+        else {
+            user = new User({ username: profile.displayName });//it will get his username from facebook
+            user.facebookId = profile.id;//id also from facebook
+            user.firstName = profile.name.givenName;//firstName
+            user.lastName = profile.name.familyName;//lastName
+            user.save((err, user) => {
+                if (err)
+                    return done(err, false);
+                else
+                    return done(null, user);
+            })
+        }
+    });
+}
+));

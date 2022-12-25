@@ -3,9 +3,10 @@ var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
-var Config=require('./Config');
+
 var passport = require('passport');
 
+require('dotenv').config();
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
@@ -19,8 +20,8 @@ const promoRouter = require("./routes/promoRouter");
 const mongoose = require("mongoose");
 mongoose.set("strictQuery", false);
 
-const url = Config.mongoUrl;
-
+const url = process.env.mongoUrl;
+console.log(url);
 const start = async () => {
   try {
     const connect = await mongoose.connect(url, {
