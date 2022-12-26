@@ -11,8 +11,7 @@ require('dotenv').config();
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 const uploadRouter = require('./routes/uploadRouter');
-
-
+const favoriteRouter=require("./routes/favoriteRouter");
 const dishRouter = require("./routes/dishRouter");
 const leaderRouter = require("./routes/leaderRouter");
 const promoRouter = require("./routes/promoRouter");
@@ -68,7 +67,7 @@ app.use("/users", usersRouter);
 
 app.use(express.static(path.join(__dirname, "public")));
 
-
+app.use('/favorites',favoriteRouter);
 app.use("/dishes", dishRouter);
 app.use("/leaders", leaderRouter);
 app.use("/promotions", promoRouter);

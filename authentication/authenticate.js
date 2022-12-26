@@ -15,17 +15,17 @@ passport.deserializeUser(User.deserializeUser());
 
 //json web tokens
 exports.getToken = (user)=> {
-    return jwt.sign(user, config.secretKey,
+    return jwt.sign(user, process.env.secretKey,
         {expiresIn: 3600});
 };
 
 var opts = {};
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
-opts.secretOrKey = config.secretKey;
+opts.secretOrKey = process.env.secretKey;
 
 exports.jwtPassport = passport.use(new JwtStrategy(opts,
     (jwt_payload, done) => {
-        console.log("JWT payload: ", jwt_payload);
+        //console.log("JWT payload: ", jwt_payload);
         User.findOne({_id: jwt_payload._id}, (err, user) => {
             if (err) {
                 return done(err, false);
