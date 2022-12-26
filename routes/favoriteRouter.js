@@ -24,8 +24,9 @@ get(authenticate.verifyUser,async(req,res,next)=>{
             user[0].dishes.push(req.body[i]);
         }
         await user[0].save();
+        const popDish=await Favorites.findById(user[0]._id).populate('user dishes');//the populatedDish
         res.statusCode=200;
-        res.json(user);
+        res.json(popDish);
     }
     else{
         const newFavorite=await Favorites.create({
@@ -35,8 +36,9 @@ get(authenticate.verifyUser,async(req,res,next)=>{
             newFavorite.dishes.push(req.body[i]);
         }
         await newFavorite.save();
+        const popDish=await Favorites.findById(newFavorite._id).populate('user dishes');//the populatedDish
         res.statusCode=200;
-        res.json(newFavorite);
+        res.json(popDish);
     }}
     catch(error){
         next(error);
@@ -54,6 +56,30 @@ get(authenticate.verifyUser,async(req,res,next)=>{
 
 
 favRouter.route('/:dishId')
+.get(authenticate.verifyUser,async(req,res,next)=>{
+    try {
+        const favorites=await Favorites.findOne({user:req.user._id});
+        if (!favorites) {
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            return res.json({"exists": false, "favorites": favorites});
+        }
+        else {
+            if (favorites.dishes.indexOf(req.params.dishId) < 0) {
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                return res.json({"exists": false, "favorites": favorites});
+            }
+            else {
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                return res.json({"exists": true, "favorites": favorites});
+            }
+        }
+    } catch (error) {
+        
+    }
+})
 .post(authenticate.verifyUser,async(req,res,next)=>{
     try {
         const user=await Favorites.findOne({user:req.user._id});
@@ -61,13 +87,15 @@ favRouter.route('/:dishId')
             const newDish=await Favorites.create({ user:req.user._id});
             newDish.dishes.push(req.params.dishId);
             await newDish.save();
+            const popDish=await Favorites.findById(newDish._id).populate('user dishes');//the populatedDish
             res.statusCode=200;
-            res.json(newDish);
+            res.json(popDish);
         }else{
             user.dishes.push(req.params.dishId);
             await user.save();
+            const popDish=await Favorites.findById(user._id).populate('user dishes');//the populatedDish
             res.statusCode=200;
-            res.json(user);
+            res.json(popDish);
         }   
     } catch (error) {
         next(error);
@@ -78,9 +106,9 @@ favRouter.route('/:dishId')
         var favoriteDishes=await Favorites.findOne({user:req.user._id}).populate('dishes');
         favoriteDishes.dishes=favoriteDishes.dishes.filter((dish)=>dish._id.toString()!==req.params.dishId);
         await favoriteDishes.save();
+        const popDish=await Favorites.findById(favoriteDishes._id).populate('user dishes');//the populatedDish
         res.statusCode=200;
-        res.json(favoriteDishes);
-    
+        res.json(popDish);
     } catch (error) {
         next(error);
     }

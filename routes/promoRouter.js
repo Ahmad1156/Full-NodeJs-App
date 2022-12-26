@@ -8,7 +8,7 @@ promoRouter
   .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
   .get(cors.cors,async (req, res, next) => {
     try {
-      const promotions = await promotion.find({});
+      const promotions = await promotion.find(req.query);
       res.statusCode = 200;
       res.setHeader("Content-Type", "application/json");
       res.json(promotions);
